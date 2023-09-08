@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StateSparseSet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.state</a> &gt; <span class="el_source">StateSparseSet.java</span></div><h1>StateSparseSet.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+package minicp.state;
+
+import java.util.NoSuchElementException;
+
+/**
+ * Set implemented using a sparse-set data structure
+ * that can be saved and restored through
+ * the {@link StateManager#saveState()} / {@link StateManager#restoreState()}
+ * methods.
+ */
+<span class="nc bnc" id="L26" title="All 2 branches missed.">public class StateSparseSet {</span>
+
+    private int[] values;
+    private int[] indexes;
+    private StateInt size;
+    private StateInt min;
+    private StateInt max;
+    private int ofs;
+    private int n;
+
+    /**
+     * Creates a set containing the elements {@code {ofs,ofs+1,...,ofs+n-1}}.
+     *
+     * @param sm the state manager that will save and restore the set when
+     *        {@link StateManager#saveState()} / {@link StateManager#restoreState()}
+     *           mehtods are called
+     * @param n  the number of elements in the set
+     * @param ofs the minimum value in the set containing {@code {ofs,ofs+1,...,ofs+n-1}}
+     */
+<span class="nc" id="L45">    public StateSparseSet(StateManager sm, int n, int ofs) {</span>
+<span class="nc" id="L46">        this.n = n;</span>
+<span class="nc" id="L47">        this.ofs = ofs;</span>
+<span class="nc" id="L48">        size = sm.makeStateInt(n);</span>
+<span class="nc" id="L49">        min = sm.makeStateInt(0);</span>
+<span class="nc" id="L50">        max = sm.makeStateInt(n - 1);</span>
+<span class="nc" id="L51">        values = new int[n];</span>
+<span class="nc" id="L52">        indexes = new int[n];</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L54">            values[i] = i;</span>
+<span class="nc" id="L55">            indexes[i] = i;</span>
+        }
+<span class="nc" id="L57">    }</span>
+
+
+    private void exchangePositions(int val1, int val2) {
+<span class="nc bnc" id="L61" title="All 4 branches missed.">        assert (checkVal(val1));</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">        assert (checkVal(val2));</span>
+<span class="nc" id="L63">        int v1 = val1;</span>
+<span class="nc" id="L64">        int v2 = val2;</span>
+<span class="nc" id="L65">        int i1 = indexes[v1];</span>
+<span class="nc" id="L66">        int i2 = indexes[v2];</span>
+<span class="nc" id="L67">        values[i1] = v2;</span>
+<span class="nc" id="L68">        values[i2] = v1;</span>
+<span class="nc" id="L69">        indexes[v1] = i2;</span>
+<span class="nc" id="L70">        indexes[v2] = i1;</span>
+<span class="nc" id="L71">    }</span>
+
+    private boolean checkVal(int val) {
+<span class="nc bnc" id="L74" title="All 4 branches missed.">        assert (val &lt;= values.length - 1);</span>
+<span class="nc" id="L75">        return true;</span>
+    }
+
+    /**
+     * Returns an array with the values present in the set.
+     *
+     * @return an array representation of the values present in the set
+     */
+    public int[] toArray() {
+<span class="nc" id="L84">        int[] res = new int[size()];</span>
+<span class="nc" id="L85">        fillArray(res);</span>
+<span class="nc" id="L86">        return res;</span>
+    }
+
+    /**
+     * Sets the first values of &lt;code&gt;dest&lt;/code&gt; to the ones
+     * present in the set.
+     *
+     * @param dest, an array large enough {@code dest.length &gt;= size()}
+     * @return the size of the set
+     */
+    public int fillArray(int[] dest) {
+<span class="nc" id="L97">        int s = size.value();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (ofs == 0) System.arraycopy(values, 0, dest, 0, s);</span>
+        else  {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            for (int i = 0; i &lt; s; i++)</span>
+<span class="nc" id="L101">                dest[i] = values[i] + ofs;</span>
+        }
+<span class="nc" id="L103">        return s;</span>
+    }
+
+    /**
+     * Checks if the set is empty
+     *
+     * @return true if the set is empty
+     */
+    public boolean isEmpty() {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        return size.value() == 0;</span>
+    }
+
+    /**
+     * Returns the size of the set.
+     *
+     * @return the size of the set
+     */
+    public int size() {
+<span class="nc" id="L121">        return size.value();</span>
+    }
+
+    /**
+     * Returns the minimum value in the set.
+     *
+     * @return the minimum value in the set
+     */
+    public int min() {
+<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (isEmpty())</span>
+<span class="nc" id="L131">            throw new NoSuchElementException();</span>
+<span class="nc" id="L132">        return min.value() + ofs;</span>
+    }
+
+    /**
+     * Returns the maximum value in the set.
+     *
+     * @return the maximum value in the set
+     */
+    public int max() {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">        if (isEmpty())</span>
+<span class="nc" id="L142">            throw new NoSuchElementException();</span>
+<span class="nc" id="L143">        else return max.value() + ofs;</span>
+    }
+
+    private void updateBoundsValRemoved(int val) {
+<span class="nc" id="L147">        updateMaxValRemoved(val);</span>
+<span class="nc" id="L148">        updateMinValRemoved(val);</span>
+<span class="nc" id="L149">    }</span>
+
+    private void updateMaxValRemoved(int val) {
+<span class="nc bnc" id="L152" title="All 4 branches missed.">        if (!isEmpty() &amp;&amp; max.value() == val) {</span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">            assert (!internalContains(val));</span>
+            //the maximum was removed, search the new one
+<span class="nc bnc" id="L155" title="All 2 branches missed.">            for (int v = val - 1; v &gt;= min.value(); v--) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">                if (internalContains(v)) {</span>
+<span class="nc" id="L157">                    max.setValue(v);</span>
+<span class="nc" id="L158">                    return;</span>
+                }
+            }
+        }
+<span class="nc" id="L162">    }</span>
+
+    private void updateMinValRemoved(int val) {
+<span class="nc bnc" id="L165" title="All 4 branches missed.">        if (!isEmpty() &amp;&amp; min.value() == val) {</span>
+<span class="nc bnc" id="L166" title="All 4 branches missed.">            assert (!internalContains(val));</span>
+            //the minimum was removed, search the new one
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            for (int v = val + 1; v &lt;= max.value(); v++) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">                if (internalContains(v)) {</span>
+<span class="nc" id="L170">                    min.setValue(v);</span>
+<span class="nc" id="L171">                    return;</span>
+                }
+            }
+        }
+<span class="nc" id="L175">    }</span>
+
+    /**
+     * Removes the given value from the set.
+     *
+     * @param val the value to remove.
+     * @return true if val was in the set, false otherwise
+     */
+    public boolean remove(int val) {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">        if (!contains(val))</span>
+<span class="nc" id="L185">            return false; //the setValue has already been removed</span>
+<span class="nc" id="L186">        val -= ofs;</span>
+<span class="nc bnc" id="L187" title="All 4 branches missed.">        assert (checkVal(val));</span>
+<span class="nc" id="L188">        int s = size();</span>
+<span class="nc" id="L189">        exchangePositions(val, values[s - 1]);</span>
+<span class="nc" id="L190">        size.decrement();</span>
+<span class="nc" id="L191">        updateBoundsValRemoved(val);</span>
+<span class="nc" id="L192">        return true;</span>
+    }
+
+    /**
+     * This method operates on the shifted value (one cannot shift now).
+     *
+     * @param val the setValue to lookup for membership
+     * @return true if val is in the set, false otherwise
+     */
+    private boolean internalContains(int val) {
+<span class="nc bnc" id="L202" title="All 4 branches missed.">        if (val &lt; 0 || val &gt;= n)</span>
+<span class="nc" id="L203">            return false;</span>
+        else
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            return indexes[val] &lt; size();</span>
+    }
+
+    /**
+     * Checks if a value is in the set.
+     *
+     * @param val the value to check
+     * @return true if val is in the set
+     */
+    public boolean contains(int val) {
+<span class="nc" id="L215">        val -= ofs;</span>
+<span class="nc bnc" id="L216" title="All 4 branches missed.">        if (val &lt; 0 || val &gt;= n)</span>
+<span class="nc" id="L217">            return false;</span>
+        else
+<span class="nc bnc" id="L219" title="All 2 branches missed.">            return indexes[val] &lt; size();</span>
+    }
+
+    /**
+     * Removes all the element from the set except the given value.
+     *
+     * @param v is an element in the set
+     */
+    public void removeAllBut(int v) {
+        // we only have to put in first position this setValue and set the size to 1
+<span class="nc bnc" id="L229" title="All 4 branches missed.">        assert (contains(v));</span>
+<span class="nc" id="L230">        v -= ofs;</span>
+<span class="nc bnc" id="L231" title="All 4 branches missed.">        assert (checkVal(v));</span>
+<span class="nc" id="L232">        int val = values[0];</span>
+<span class="nc" id="L233">        int index = indexes[v];</span>
+<span class="nc" id="L234">        indexes[v] = 0;</span>
+<span class="nc" id="L235">        values[0] = v;</span>
+<span class="nc" id="L236">        indexes[val] = index;</span>
+<span class="nc" id="L237">        values[index] = val;</span>
+<span class="nc" id="L238">        min.setValue(v);</span>
+<span class="nc" id="L239">        max.setValue(v);</span>
+<span class="nc" id="L240">        size.setValue(1);</span>
+<span class="nc" id="L241">    }</span>
+
+    /**
+     * Removes all the values in the set.
+     */
+    public void removeAll() {
+<span class="nc" id="L247">        size.setValue(0);</span>
+<span class="nc" id="L248">    }</span>
+
+    /**
+     * Remove all the values less than the given value from the set
+     *
+     * @param value a value such that all the ones smaller are removed
+     */
+    public void removeBelow(int value) {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">        if (max() &lt; value) {</span>
+<span class="nc" id="L257">            removeAll();</span>
+        } else {
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            for (int v = min(); v &lt; value; v++) {</span>
+<span class="nc" id="L260">                remove(v);</span>
+            }
+        }
+<span class="nc" id="L263">    }</span>
+
+    /**
+     * Remove all the values larger than the given value from the set
+     *
+     * @param value a value such that all the ones greater are removed
+     */
+    public void removeAbove(int value) {
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        if (min() &gt; value) {</span>
+<span class="nc" id="L272">            removeAll();</span>
+        } else {
+<span class="nc" id="L274">            int max = max();</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">            for (int v = max; v &gt; value; v--) {</span>
+<span class="nc" id="L276">                remove(v);</span>
+            }
+        }
+<span class="nc" id="L279">    }</span>
+
+
+    @Override
+    public String toString() {
+<span class="nc" id="L284">        StringBuilder b = new StringBuilder();</span>
+<span class="nc" id="L285">        b.append(&quot;{&quot;);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        for (int i = 0; i &lt; size() - 1; i++) {</span>
+<span class="nc" id="L287">            b.append(values[i] + ofs);</span>
+<span class="nc" id="L288">            b.append(',');</span>
+        }
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        if (size() &gt; 0) b.append(values[size() - 1] + ofs);</span>
+<span class="nc" id="L291">        b.append(&quot;}&quot;);</span>
+<span class="nc" id="L292">        return b.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

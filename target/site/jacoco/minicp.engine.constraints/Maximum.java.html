@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Maximum.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.constraints</a> &gt; <span class="el_source">Maximum.java</span></div><h1>Maximum.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+
+package minicp.engine.constraints;
+
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.IntVar;
+import minicp.util.exception.NotImplementedException;
+
+/**
+ * Maximum Constraint
+ */
+<span class="nc bnc" id="L26" title="All 2 branches missed.">public class Maximum extends AbstractConstraint {</span>
+
+    private final IntVar[] x;
+    private final IntVar y;
+
+    /**
+     * Creates the maximum constraint y = maximum(x[0],x[1],...,x[n])?
+     *
+     * @param x the variable on which the maximum is to be found
+     * @param y the variable that is equal to the maximum on x
+     */
+    public Maximum(IntVar[] x, IntVar y) {
+<span class="nc" id="L38">        super(x[0].getSolver());</span>
+<span class="nc bnc" id="L39" title="All 4 branches missed.">        assert (x.length &gt; 0);</span>
+<span class="nc" id="L40">        this.x = x;</span>
+<span class="nc" id="L41">        this.y = y;</span>
+<span class="nc" id="L42">    }</span>
+
+
+    @Override
+    public void post() {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        for(IntVar var : x) var.propagateOnBoundChange(this);</span>
+<span class="nc" id="L48">        y.propagateOnBoundChange(this);</span>
+<span class="nc" id="L49">        propagate();</span>
+<span class="nc" id="L50">    }</span>
+
+
+    @Override
+    public void propagate() {
+<span class="nc" id="L55">        int yMax = y.max();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        for (IntVar xVar: x) {</span>
+<span class="nc" id="L57">            xVar.removeAbove(yMax);</span>
+        }
+<span class="nc" id="L59">        int xMax = Integer.MIN_VALUE;</span>
+<span class="nc" id="L60">        int xMin = Integer.MIN_VALUE;</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        for (IntVar xVar: x) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (xVar.max() &gt; xMax) xMax = xVar.max();</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            if (xVar.min() &gt; xMin) xMin = xVar.min();</span>
+        }
+<span class="nc" id="L65">        y.removeBelow(xMin);</span>
+<span class="nc" id="L66">        y.removeAbove(xMax);</span>
+
+<span class="nc" id="L68">        int count = 0;</span>
+<span class="nc" id="L69">        IntVar xM = x[0];</span>
+<span class="nc" id="L70">        int yMin = y.min();</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        for (IntVar xVar: x){</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (xVar.max() &gt;= yMin) {</span>
+<span class="nc" id="L73">                count++;</span>
+<span class="nc" id="L74">                xM = xVar;</span>
+            }
+        }
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (count == 1) xM.removeBelow(y.min());</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (count == 0) {y.removeBelow(1); y.removeAbove(0);}</span>
+<span class="nc" id="L79">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

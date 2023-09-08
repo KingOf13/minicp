@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Element1DVar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.constraints</a> &gt; <span class="el_source">Element1DVar.java</span></div><h1>Element1DVar.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+package minicp.engine.constraints;
+
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.IntVar;
+
+public class Element1DVar extends AbstractConstraint {
+
+    private final IntVar[] array;
+    private final IntVar y;
+    private final IntVar z;
+
+    
+
+    public Element1DVar(IntVar[] array, IntVar y, IntVar z) {
+<span class="nc" id="L30">        super(y.getSolver());</span>
+<span class="nc" id="L31">        this.array = array;</span>
+<span class="nc" id="L32">        this.y = y;</span>
+<span class="nc" id="L33">        this.z = z;</span>
+
+        
+<span class="nc" id="L36">    }</span>
+
+    @Override
+    public void post() {
+<span class="nc" id="L40">        y.removeBelow(0);</span>
+<span class="nc" id="L41">        y.removeAbove(array.length-1);</span>
+
+<span class="nc" id="L43">        y.propagateOnDomainChange(this);</span>
+<span class="nc" id="L44">        z.propagateOnBoundChange(this);</span>
+<span class="nc" id="L45">        propagate();</span>
+<span class="nc" id="L46">    }</span>
+
+    @Override
+    public void propagate() {
+
+<span class="nc" id="L51">        int[] yVals = new int[y.size()];</span>
+<span class="nc" id="L52">        y.fillArray(yVals);</span>
+
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        for(int i=0; i&lt;yVals.length; i++) {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            if(array[yVals[i]].min()&gt;z.max()) {</span>
+<span class="nc" id="L56">                y.remove(yVals[i]);</span>
+            }
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if(array[yVals[i]].max()&lt;z.min()) {</span>
+<span class="nc" id="L59">                y.remove(yVals[i]);</span>
+            }
+        }
+
+
+<span class="nc" id="L64">        yVals = new int[y.size()];</span>
+<span class="nc" id="L65">        y.fillArray(yVals);</span>
+
+<span class="nc" id="L67">        int minValue = Integer.MAX_VALUE;</span>
+<span class="nc" id="L68">        int maxValue = Integer.MIN_VALUE;</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        for(int i=0; i&lt;yVals.length; i++) {</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if(array[yVals[i]].max()&gt;maxValue){</span>
+<span class="nc" id="L72">                maxValue= array[yVals[i]].max();</span>
+            }
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if(array[yVals[i]].min()&lt;minValue){</span>
+<span class="nc" id="L75">                minValue = array[yVals[i]].min();</span>
+            }
+        }
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if(maxValue &lt; z.max()) {</span>
+<span class="nc" id="L80">            z.removeAbove(maxValue);</span>
+        }
+<span class="nc bnc" id="L82" title="All 2 branches missed.">        if(minValue &gt; z.min()) {</span>
+<span class="nc" id="L83">            z.removeBelow(minValue);</span>
+        }
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">        if(y.size() == 1) {</span>
+<span class="nc" id="L87">            y.getSolver().post(new Equal(array[y.min()],z));</span>
+        }
+<span class="nc" id="L89">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

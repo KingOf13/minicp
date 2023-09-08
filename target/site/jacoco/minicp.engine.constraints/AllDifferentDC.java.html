@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AllDifferentDC.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.constraints</a> &gt; <span class="el_source">AllDifferentDC.java</span></div><h1>AllDifferentDC.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+package minicp.engine.constraints;
+
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.IntVar;
+import minicp.util.GraphUtil;
+import minicp.util.GraphUtil.Graph;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+/**
+ * Arc Consistent AllDifferent Constraint
+ *
+ * Algorithm described in
+ * &quot;A filtering algorithm for constraints of difference in CSPs&quot; J-C. Régin, AAAI-94
+ */
+public class AllDifferentDC extends AbstractConstraint {
+
+    private IntVar[] x;
+
+    private final MaximumMatching maximumMatching;
+
+    private final int nVar;
+    private int nVal;
+
+    // residual graph
+    private ArrayList&lt;Integer&gt;[] in;
+    private ArrayList&lt;Integer&gt;[] out;
+    private int nNodes;
+<span class="nc" id="L47">    private Graph g = new Graph() {</span>
+        @Override
+        public int n() {
+<span class="nc" id="L50">            return nNodes;</span>
+        }
+
+        @Override
+        public Iterable&lt;Integer&gt; in(int idx) {
+<span class="nc" id="L55">            return in[idx];</span>
+        }
+
+        @Override
+        public Iterable&lt;Integer&gt; out(int idx) {
+<span class="nc" id="L60">            return out[idx];</span>
+        }
+    };
+
+    private int[] match;
+    private boolean[] matched;
+
+    private int minVal;
+    private int maxVal;
+
+    public AllDifferentDC(IntVar... x) {
+<span class="nc" id="L71">        super(x[0].getSolver());</span>
+<span class="nc" id="L72">        this.x = x;</span>
+<span class="nc" id="L73">        maximumMatching = new MaximumMatching(x);</span>
+<span class="nc" id="L74">        match = new int[x.length];</span>
+<span class="nc" id="L75">        this.nVar = x.length;</span>
+<span class="nc" id="L76">    }</span>
+
+    @Override
+    public void post() {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        for (int i = 0; i &lt; nVar; i++) {</span>
+<span class="nc" id="L81">            x[i].propagateOnDomainChange(this);</span>
+        }
+<span class="nc" id="L83">        updateRange();</span>
+
+<span class="nc" id="L85">        matched = new boolean[nVal];</span>
+<span class="nc" id="L86">        nNodes = nVar + nVal + 1;</span>
+<span class="nc" id="L87">        in = new ArrayList[nNodes];</span>
+<span class="nc" id="L88">        out = new ArrayList[nNodes];</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (int i = 0; i &lt; nNodes; i++) {</span>
+<span class="nc" id="L90">            in[i] = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L91">            out[i] = new ArrayList&lt;&gt;();</span>
+        }
+<span class="nc" id="L93">        propagate();</span>
+<span class="nc" id="L94">    }</span>
+
+    private void updateRange() {
+<span class="nc" id="L97">        minVal = Integer.MAX_VALUE;</span>
+<span class="nc" id="L98">        maxVal = Integer.MIN_VALUE;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        for (int i = 0; i &lt; nVar; i++) {</span>
+<span class="nc" id="L100">            minVal = Math.min(minVal, x[i].min());</span>
+<span class="nc" id="L101">            maxVal = Math.max(maxVal, x[i].max());</span>
+        }
+<span class="nc" id="L103">        nVal = maxVal - minVal + 1;</span>
+<span class="nc" id="L104">    }</span>
+
+
+    private void updateGraph() {
+<span class="nc" id="L108">        nNodes = nVar + nVal + 1;</span>
+<span class="nc" id="L109">        int sink = nNodes - 1;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        for (int j = 0; j &lt; nNodes; j++) {</span>
+<span class="nc" id="L111">            in[j].clear();</span>
+<span class="nc" id="L112">            out[j].clear();</span>
+        }
+
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        for (int i = 0; i &lt; x.length; i++ ){</span>
+<span class="nc" id="L116">            int [] valList = new int[x[i].size()];</span>
+<span class="nc" id="L117">            x[i].fillArray(valList);</span>
+<span class="nc" id="L118">            int mV = match[i];</span>
+<span class="nc" id="L119">            matched[mV - minVal] = true;</span>
+
+<span class="nc bnc" id="L121" title="All 2 branches missed.">            for (int val : valList){</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">                if (val == mV){</span>
+<span class="nc" id="L123">                    in[val - minVal + nVar].add(i);</span>
+<span class="nc" id="L124">                    out[i].add(val - minVal + nVar);</span>
+                } else {
+<span class="nc" id="L126">                    in[i].add(val - minVal + nVar);</span>
+<span class="nc" id="L127">                    out[val - minVal + nVar].add(i);</span>
+                }
+            }
+        }
+
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        for (int i = minVal; i &lt;= maxVal; i++){</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (matched[i-minVal]){</span>
+<span class="nc" id="L134">                in[sink].add(i - minVal);</span>
+<span class="nc" id="L135">                out[i - minVal].add(sink);</span>
+            } else {
+<span class="nc" id="L137">                in[i - minVal].add(sink);</span>
+<span class="nc" id="L138">                out[sink].add(i - minVal);</span>
+            }
+        }
+<span class="nc" id="L141">    }</span>
+
+
+    @Override
+    public void propagate() {
+<span class="nc" id="L146">        matched = new boolean[nVal];</span>
+<span class="nc" id="L147">        maximumMatching.compute(match);</span>
+<span class="nc" id="L148">        updateRange();</span>
+<span class="nc" id="L149">        updateGraph();</span>
+
+<span class="nc" id="L151">        int[] scc = GraphUtil.stronglyConnectedComponents(g);</span>
+
+<span class="nc bnc" id="L153" title="All 2 branches missed.">        for (int i = 0; i &lt; x.length; i++) {</span>
+<span class="nc" id="L154">            int[] valX = new int[x[i].size()];</span>
+<span class="nc" id="L155">            x[i].fillArray(valX);</span>
+
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            for (int val: valX) {</span>
+<span class="nc bnc" id="L158" title="All 4 branches missed.">                if (match[i] != val &amp;&amp; scc[i] != scc[val - minVal + nVar])</span>
+<span class="nc" id="L159">                    x[i].remove(val);</span>
+            }
+        }
+<span class="nc" id="L162">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

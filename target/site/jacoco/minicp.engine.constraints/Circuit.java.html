@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Circuit.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.constraints</a> &gt; <span class="el_source">Circuit.java</span></div><h1>Circuit.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+
+package minicp.engine.constraints;
+
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.IntVar;
+import minicp.state.StateInt;
+import minicp.util.exception.NotImplementedException;
+
+import static minicp.cp.Factory.allDifferent;
+
+/**
+ * Hamiltonian Circuit Constraint with a successor model
+ */
+<span class="nc bnc" id="L29" title="All 2 branches missed.">public class Circuit extends AbstractConstraint {</span>
+
+    private final IntVar[] x;
+    private final StateInt[] dest;
+    private final StateInt[] orig;
+    private final StateInt[] lengthToDest;
+
+    /**
+     * Creates an Hamiltonian Circuit Constraint
+     * with a successor model.
+     *
+     * @param x the variables representing the successor array that is
+     *          {@code x[i]} is the city visited after city i
+     */
+    public Circuit(IntVar[] x) {
+<span class="nc" id="L44">        super(x[0].getSolver());</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">        assert (x.length &gt; 0);</span>
+<span class="nc" id="L46">        this.x = x;</span>
+<span class="nc" id="L47">        dest = new StateInt[x.length];</span>
+<span class="nc" id="L48">        orig = new StateInt[x.length];</span>
+<span class="nc" id="L49">        lengthToDest = new StateInt[x.length];</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        for (int i = 0; i &lt; x.length; i++) {</span>
+<span class="nc" id="L51">            dest[i] = getSolver().getStateManager().makeStateInt(i);</span>
+<span class="nc" id="L52">            orig[i] = getSolver().getStateManager().makeStateInt(i);</span>
+<span class="nc" id="L53">            lengthToDest[i] = getSolver().getStateManager().makeStateInt(0);</span>
+        }
+<span class="nc" id="L55">    }</span>
+
+
+    @Override
+    public void post() {
+<span class="nc" id="L60">        getSolver().post(allDifferent(x));</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">         for (int i = 0; i &lt; x.length; i++){</span>
+<span class="nc" id="L62">                 int finalI = i;</span>
+<span class="nc" id="L63">                 x[i].whenBind(() -&gt; bind(finalI));</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                 if(x[i].isBound()) bind(i);</span>
+        }
+
+<span class="nc" id="L67">    }</span>
+
+
+    private void bind(int i) {
+<span class="nc" id="L71">        dest[orig[i].value()].setValue(dest[x[i].min()].value());</span>
+<span class="nc" id="L72">        orig[dest[x[i].min()].value()].setValue(orig[i].value());</span>
+<span class="nc" id="L73">        lengthToDest[orig[i].value()].setValue(lengthToDest[orig[i].value()].value() + lengthToDest[x[i].min()].value() + 1);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (lengthToDest[orig[i].value()].value() &lt; x.length-1){</span>
+<span class="nc" id="L75">            x[dest[x[i].min()].value()].remove(orig[i].value());</span>
+        }
+<span class="nc" id="L77">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

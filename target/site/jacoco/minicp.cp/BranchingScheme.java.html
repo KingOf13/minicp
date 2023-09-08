@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BranchingScheme.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.cp</a> &gt; <span class="el_source">BranchingScheme.java</span></div><h1>BranchingScheme.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+package minicp.cp;
+
+import minicp.engine.core.IntVar;
+import minicp.engine.core.Solver;
+import minicp.search.LimitedDiscrepancyBranching;
+import minicp.search.Sequencer;
+import minicp.util.Procedure;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
+
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import static minicp.cp.Factory.equal;
+import static minicp.cp.Factory.notEqual;
+
+/**
+ * Factory for search procedures.
+ *
+ * &lt;p&gt;A typical custom search on an array of variable {@code q} is illustrated next&lt;/p&gt;
+ *  &lt;pre&gt;
+ * {@code
+ * DFSearch search = Factory.makeDfs(cp, () -&gt; {
+ *   int idx = -1; // index of the first variable that is not bound
+ *   for (int k = 0; k &lt; q.length; k++)
+ *      if(q[k].size() &gt; 1) {
+ *        idx=k;
+ *        break;
+ *      }
+ *   if(idx == -1)
+ *      return new Procedure[0];
+ *   else {
+ *      IntVar qi = q[idx];
+ *      int v = qi.min();
+ *      Procedure left = () -&gt; Factory.equal(qi, v);
+ *      Procedure right = () -&gt; Factory.notEqual(qi, v);
+ *      return branch(left,right);
+ *   }
+ * });
+ * }
+ * &lt;/pre&gt;
+ * @see Factory#makeDfs(Solver, Supplier)
+ */
+public final class BranchingScheme {
+
+<span class="nc" id="L62">    private BranchingScheme() {</span>
+<span class="nc" id="L63">        throw new UnsupportedOperationException();</span>
+    }
+
+    /**
+     * Constant that should be returned
+     * to notify the solver that there are no branches
+     * to create any more and that the current state should
+     * be considered as a solution.
+     * @see Factory#makeDfs(Solver, Supplier)
+     */
+<span class="nc" id="L73">    public static final Procedure[] EMPTY = new Procedure[0];</span>
+<span class="nc" id="L74">    private static IntVar lastConflict = null;</span>
+
+    /**
+     *
+     * @param branches the ordered closures for the child branches
+     *                 ordered from left to right in the depth first search.
+     *
+     * @return an array with those branches
+     * @see minicp.search.DFSearch
+     */
+    public static Procedure[] branch(Procedure... branches) {
+<span class="nc" id="L85">        return branches;</span>
+    }
+
+    /**
+     * Minimum selector.
+     * &lt;p&gt;Example of usage.
+     * &lt;pre&gt;
+     * {@code
+     * IntVar xs = selectMin(x,xi -&gt; xi.size() &gt; 1,xi -&gt; xi.size());
+     * }
+     * &lt;/pre&gt;
+     *
+     * @param x the array on which the minimum value is searched
+     * @param p the predicate that filters the element eligible for selection
+     * @param f the evaluation function that returns a comparable when applied on an element of x
+     * @param &lt;T&gt; the type of the elements in x, for instance {@link IntVar}
+     * @param &lt;N&gt; the type on which the minimum is computed, for instance {@link Integer}
+     * @return the minimum element in x that satisfies the predicate p
+     *         or null if no element satisfies the predicate.
+     */
+    public static &lt;T, N extends Comparable&lt;N&gt;&gt; T selectMin(T[] x, Predicate&lt;T&gt; p, Function&lt;T, N&gt; f) {
+<span class="nc" id="L106">        T sel = null;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        for (T xi : x) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            if (p.test(xi)) {</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">                sel = sel == null || f.apply(xi).compareTo(f.apply(sel)) &lt; 0 ? xi : sel;</span>
+            }
+        }
+<span class="nc" id="L112">        return sel;</span>
+    }
+
+    /**
+     * First-Fail strategy.
+     * It selects the first variable with a domain larger than one.
+     * Then it creates two branches. The left branch
+     * assigning the variable to its minimum value.
+     * The right branch removing this minimum value from the domain.
+     * @param x the variable on which the first fail strategy is applied.
+     * @return a first-fail branching strategy
+     * @see Factory#makeDfs(Solver, Supplier)
+     */
+    public static Supplier&lt;Procedure[]&gt; firstFail(IntVar... x) {
+<span class="nc" id="L126">        return () -&gt; {</span>
+<span class="nc" id="L127">            IntVar xs = selectMin(x,</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                    xi -&gt; xi.size() &gt; 1,</span>
+<span class="nc" id="L129">                    xi -&gt; xi.size());</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            if (xs == null)</span>
+<span class="nc" id="L131">                return EMPTY;</span>
+            else {
+<span class="nc" id="L133">                int v = xs.min();</span>
+<span class="nc" id="L134">                return branch(() -&gt; xs.getSolver().post(equal(xs, v)),</span>
+<span class="nc" id="L135">                        () -&gt; xs.getSolver().post(notEqual(xs, v)));</span>
+            }
+        };
+    }
+
+    /**
+     * Sequential Search combinator that linearly
+     * considers a list of branching generator.
+     * One branching of this list is executed
+     * when all the previous ones are exhausted (they return an empty array).
+     * @param choices the branching schemes considered sequentially in the sequential by
+     *                path in the search tree
+     * @return a branching scheme implementing the sequential search
+     * @see Sequencer
+     */
+    public static Supplier&lt;Procedure[]&gt; and(Supplier&lt;Procedure[]&gt;... choices) {
+<span class="nc" id="L151">        return new Sequencer(choices);</span>
+    }
+
+    /**
+     * Limited Discrepancy Search combinator
+     * that limits the number of right decisions
+     * @param branching a branching scheme
+     * @param maxDiscrepancy a discrepancy limit (non negative number)
+     * @return a branching scheme that cuts off any path accumulating
+     *         a discrepancy beyond the limit maxDiscrepancy
+     * @see LimitedDiscrepancyBranching
+     */
+    public static Supplier&lt;Procedure[]&gt; limitedDiscrepancy(Supplier&lt;Procedure[]&gt; branching, int maxDiscrepancy) {
+<span class="nc" id="L164">        return new LimitedDiscrepancyBranching(branching, maxDiscrepancy);</span>
+    }
+
+    /**
+     * Last conflict heuristic
+     * Attempts to branch first on the last variable that caused an Inconsistency
+     *
+     * Lecoutre, C., Saïs, L., Tabary, S., &amp; Vidal, V. (2009).
+     * Reasoning from last conflict (s) in constraint programming.
+     * Artificial Intelligence, 173(18), 1592-1614.
+     *
+     * @param variableSelector returns the next variable to bind
+     * @param valueSelector given a variable, returns the value to which
+     *                      it must be assigned on the left branch (and excluded on the right)
+     */
+    public static Supplier&lt;Procedure[]&gt; lastConflict(Supplier&lt;IntVar&gt; variableSelector, Function&lt;IntVar, Integer&gt; valueSelector) {
+        IntVar xs;
+
+<span class="nc bnc" id="L182" title="All 4 branches missed.">        if (lastConflict != null &amp;&amp; !lastConflict.isBound()){</span>
+<span class="nc" id="L183">            xs = lastConflict;</span>
+        }
+<span class="nc" id="L185">        xs = variableSelector.get();</span>
+
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        if (xs == null){</span>
+<span class="nc" id="L188">            return () -&gt; {return EMPTY;};</span>
+        }
+
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (xs.size() &lt; 1) {</span>
+<span class="nc" id="L192">            lastConflict = xs;</span>
+<span class="nc" id="L193">            throw new InconsistencyException();</span>
+        }
+<span class="nc" id="L195">        int v = valueSelector.apply(xs);</span>
+<span class="nc" id="L196">        final IntVar xsfinal = xs;</span>
+<span class="nc" id="L197">        return () -&gt; {</span>
+<span class="nc" id="L198">              return   branch(</span>
+<span class="nc" id="L199">                        () -&gt; equal(xsfinal, v),</span>
+<span class="nc" id="L200">                        () -&gt; notEqual(xsfinal, v));</span>
+        };
+    }
+
+    /**
+     * Conflict Ordering Search
+     *
+     * Gay, S., Hartert, R., Lecoutre, C., &amp; Schaus, P. (2015).
+     * Conflict ordering search for scheduling problems.
+     * In International conference on principles and practice of constraint programming (pp. 140-148).
+     * Springer.
+     *
+     * @param variableSelector returns the next variable to bind
+     * @param valueSelector given a variable, returns the value to which
+     *                      it must be assigned on the left branch (and excluded on the right)
+     */
+    public static Supplier&lt;Procedure[]&gt; conflictOrderingSearch(Supplier&lt;IntVar&gt; variableSelector, Function&lt;IntVar, Integer&gt; valueSelector) {
+<span class="nc" id="L217">        throw new NotImplementedException();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

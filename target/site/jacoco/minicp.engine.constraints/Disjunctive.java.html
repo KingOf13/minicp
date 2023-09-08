@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Disjunctive.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.constraints</a> &gt; <span class="el_source">Disjunctive.java</span></div><h1>Disjunctive.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+
+package minicp.engine.constraints;
+
+import minicp.cp.Factory;
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.BoolVar;
+import minicp.engine.core.IntVar;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
+
+import java.util.*;
+
+import static minicp.cp.Factory.*;
+
+/**
+ * Disjunctive Scheduling Constraint:
+ * Any two pairs of activities cannot overlap in time.
+ */
+public class Disjunctive extends AbstractConstraint {
+
+    private final IntVar[] start;
+    private final int[] duration;
+    private final IntVar[] end;
+    private final boolean postMirror;
+    private final Integer[] IDX;
+
+    
+
+    /**
+     * Creates a disjunctive constraint that enforces
+     * that for any two pair i,j of activities we have
+     * {@code start[i]+duration[i] &lt;= start[j] or start[j]+duration[j] &lt;= start[i]}.
+     *
+     * @param start the start times of the activities
+     * @param duration the durations of the activities
+     */
+    public Disjunctive(IntVar[] start, int[] duration) {
+<span class="nc" id="L53">        this(start, duration, true);</span>
+<span class="nc" id="L54">    }</span>
+
+
+    private Disjunctive(IntVar[] start, int[] duration, boolean postMirror) {
+<span class="nc" id="L58">        super(start[0].getSolver());</span>
+<span class="nc" id="L59">        this.start = start;</span>
+<span class="nc" id="L60">        this.duration = duration;</span>
+<span class="nc" id="L61">        this.end = Factory.makeIntVarArray(start.length, i -&gt; plus(start[i], duration[i]));</span>
+<span class="nc" id="L62">        this.postMirror = postMirror;</span>
+<span class="nc" id="L63">        IDX = new Integer[start.length];</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        for (int i = 0; i &lt; start.length; i++) IDX[i] = i;</span>
+<span class="nc" id="L65">    }</span>
+
+
+    @Override
+    public void post() {
+/*
+        int[] demands = new int[start.length];
+        for (int i = 0; i &lt; start.length; i++) {
+            demands[i] = 1;
+        }
+        getSolver().post(new Cumulative(start, duration, demands, 1), false);*/
+
+        // TODO 1: replace by  posting  binary decomposition using IsLessOrEqualVar
+<span class="nc" id="L78">        BoolVar[][] bij = new BoolVar[start.length][start.length];</span>
+<span class="nc" id="L79">        BoolVar[][] bji = new BoolVar[start.length][start.length];</span>
+
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        for (int i = 0; i &lt; start.length; i++) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            for (int j = i+1; j &lt; start.length; j++) {</span>
+<span class="nc" id="L83">                bij[i][j] = makeBoolVar(getSolver());</span>
+<span class="nc" id="L84">                bji[i][j] = makeBoolVar(getSolver());</span>
+            }
+        }
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        for (int i = 0; i &lt; start.length; i++) {</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">            for (int j = i+1; j &lt; start.length; j++) {</span>
+<span class="nc" id="L90">                getSolver().post(new IsLessOrEqualVar(bij[i][j], end[i], start[j]));</span>
+<span class="nc" id="L91">                getSolver().post(new IsLessOrEqualVar(bji[i][j], end[j], start[i]));</span>
+<span class="nc" id="L92">                getSolver().post(new NotEqual(bij[i][j],bji[i][j]));</span>
+            }
+        }
+
+
+        // TODO 2: add the mirror filtering as done in the Cumulative Constraint
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (postMirror) {</span>
+<span class="nc" id="L99">            IntVar[] startMirror = Factory.makeIntVarArray(start.length, i -&gt; minus(end[i]));</span>
+<span class="nc" id="L100">            getSolver().post(new Disjunctive(startMirror, duration, false), false);</span>
+        }
+
+<span class="nc" id="L103">    }</span>
+
+    @Override
+    public void propagate() {
+        // HINT: for the TODO 1-4 you'll need the ThetaTree data-structure
+
+        // TODO 3: add the OverLoadCheck algorithms
+
+
+        // TODO 4: add the Detectable Precedences algorithm
+
+
+        // TODO 5: add the Not-Last algorithm
+
+        // TODO 6 (optional, for a bonus): implement the Lambda-Theta tree and implement the Edge-Finding        overLoadChecker();
+
+<span class="nc" id="L119">        boolean fixed = false;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">        while (!fixed) {</span>
+<span class="nc" id="L121">            fixed = true;</span>
+<span class="nc" id="L122">            overLoadChecker();</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">            fixed =  fixed &amp;&amp; !detectablePrecedence();</span>
+<span class="nc bnc" id="L124" title="All 4 branches missed.">            fixed =  fixed &amp;&amp; !notLast();</span>
+        }
+
+<span class="nc" id="L127">    }</span>
+
+    private ArrayList&lt;Integer&gt; leftCut(int lct) {
+<span class="nc" id="L130">        ArrayList&lt;Integer&gt; returnArray = new ArrayList();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        for (int i = 0; i &lt; end.length; i++) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (end[i].max() &lt;= lct) returnArray.add(i);</span>
+        }
+<span class="nc" id="L134">        return returnArray;</span>
+    }
+
+
+    private void overLoadChecker() {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        for (int j = 0; j &lt; start.length; j ++) {</span>
+<span class="nc" id="L140">             int lct = end[j].max();</span>
+<span class="nc" id="L141">            ArrayList&lt;Integer&gt; lc = leftCut(lct);</span>
+<span class="nc" id="L142">            ThetaTree theta = new ThetaTree(lc.size());</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            for (int i : lc) {</span>
+<span class="nc" id="L144">                theta.insert(i, end[i].min(), duration[i]);</span>
+<span class="nc" id="L145">            }</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">            if (theta.getECT() &gt; lct) throw new InconsistencyException();</span>
+        }
+<span class="nc" id="L148">    }</span>
+
+    /**
+     * @return true if one domain was changed by the detectable precedence algo
+     */
+    private boolean detectablePrecedence() {
+<span class="nc" id="L154">        Integer[] tLSTArr = IDX.clone();</span>
+<span class="nc" id="L155">        Arrays.sort(tLSTArr, new Comparator&lt;Integer&gt;() {</span>
+            @Override public int compare(final Integer o1, final Integer o2) {
+<span class="nc" id="L157">                return Integer.compare(start[o1].max(), start[o2].max());</span>
+            }
+        });
+<span class="nc" id="L160">        List&lt;Integer&gt; tLST = Arrays.asList(tLSTArr);</span>
+<span class="nc" id="L161">        Integer[] tECTArr = IDX.clone();</span>
+<span class="nc" id="L162">        Arrays.sort(tECTArr, new Comparator&lt;Integer&gt;() {</span>
+            @Override public int compare(final Integer o1, final Integer o2) {
+<span class="nc" id="L164">                return Integer.compare(end[o1].min(), end[o2].min());</span>
+            }
+        });
+<span class="nc" id="L167">        List&lt;Integer&gt; tECT = Arrays.asList(tECTArr);</span>
+
+<span class="nc" id="L169">        Iterator&lt;Integer&gt; ite = tLST.iterator();</span>
+<span class="nc" id="L170">        int j = ite.next();</span>
+<span class="nc" id="L171">        ThetaTree theta = new ThetaTree(start.length);</span>
+<span class="nc" id="L172">        int[] estprime = new int[start.length];</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">        for (int i : tECT) {</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            while (end[i].min() &gt; start[j].max()) {</span>
+<span class="nc" id="L175">                theta.insert(j, end[j].min(), duration[j]);</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if (ite.hasNext()) j = ite.next();</span>
+                else break;
+            }
+            //estprime[i] =
+
+<span class="nc" id="L181">        }</span>
+
+<span class="nc" id="L183">        throw new NotImplementedException(&quot;Disjunctive&quot;);</span>
+    }
+
+    /**
+     * @return true if one domain was changed by the not-last algo
+     */
+    private boolean notLast() {
+<span class="nc" id="L190">         throw new NotImplementedException(&quot;Disjunctive&quot;);</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

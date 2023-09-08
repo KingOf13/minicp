@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SparseSetDomain.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.core</a> &gt; <span class="el_source">SparseSetDomain.java</span></div><h1>SparseSetDomain.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+package minicp.engine.core;
+
+import minicp.state.StateManager;
+import minicp.state.StateSparseSet;
+
+
+/**
+ * Implementation of a domain with a sparse-set
+ */
+public class SparseSetDomain implements IntDomain {
+    private StateSparseSet domain;
+
+
+<span class="nc" id="L29">    public SparseSetDomain(StateManager sm, int min, int max) {</span>
+<span class="nc" id="L30">        domain = new StateSparseSet(sm, max - min + 1, min);</span>
+<span class="nc" id="L31">    }</span>
+
+    @Override
+    public int fillArray(int[] dest) {
+<span class="nc" id="L35">        return domain.fillArray(dest);</span>
+    }
+
+    @Override
+    public int min() {
+<span class="nc" id="L40">        return domain.min();</span>
+    }
+
+    @Override
+    public int max() {
+<span class="nc" id="L45">        return domain.max();</span>
+    }
+
+    @Override
+    public int size() {
+<span class="nc" id="L50">        return domain.size();</span>
+    }
+
+    @Override
+    public boolean contains(int v) {
+<span class="nc" id="L55">        return domain.contains(v);</span>
+    }
+
+    @Override
+    public boolean isBound() {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        return domain.size() == 1;</span>
+    }
+
+    @Override
+    public void remove(int v, DomainListener l) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (domain.contains(v)) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            boolean maxChanged = max() == v;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            boolean minChanged = min() == v;</span>
+<span class="nc" id="L68">            domain.remove(v);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (domain.size() == 0)</span>
+<span class="nc" id="L70">                l.empty();</span>
+<span class="nc" id="L71">            l.change();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (maxChanged) l.changeMax();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (minChanged) l.changeMin();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            if (domain.size() == 1) l.bind();</span>
+        }
+<span class="nc" id="L76">    }</span>
+
+    @Override
+    public void removeAllBut(int v, DomainListener l) {
+<span class="nc bnc" id="L80" title="All 2 branches missed.">        if (domain.contains(v)) {</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">            if (domain.size() != 1) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">                boolean maxChanged = max() != v;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                boolean minChanged = min() != v;</span>
+<span class="nc" id="L84">                domain.removeAllBut(v);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">                if (domain.size() == 0)</span>
+<span class="nc" id="L86">                    l.empty();</span>
+<span class="nc" id="L87">                l.bind();</span>
+<span class="nc" id="L88">                l.change();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">                if (maxChanged) l.changeMax();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                if (minChanged) l.changeMin();</span>
+<span class="nc" id="L91">            }</span>
+        } else {
+<span class="nc" id="L93">            domain.removeAll();</span>
+<span class="nc" id="L94">            l.empty();</span>
+        }
+<span class="nc" id="L96">    }</span>
+
+    @Override
+    public void removeBelow(int value, DomainListener l) {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (domain.min() &lt; value) {</span>
+<span class="nc" id="L101">            domain.removeBelow(value);</span>
+<span class="nc bnc" id="L102" title="All 3 branches missed.">            switch (domain.size()) {</span>
+                case 0:
+<span class="nc" id="L104">                    l.empty();</span>
+<span class="nc" id="L105">                    break;</span>
+                case 1:
+<span class="nc" id="L107">                    l.bind();</span>
+                default:
+<span class="nc" id="L109">                    l.changeMin();</span>
+<span class="nc" id="L110">                    l.change();</span>
+                    break;
+            }
+        }
+<span class="nc" id="L114">    }</span>
+
+    @Override
+    public void removeAbove(int value, DomainListener l) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (domain.max() &gt; value) {</span>
+<span class="nc" id="L119">            domain.removeAbove(value);</span>
+<span class="nc bnc" id="L120" title="All 3 branches missed.">            switch (domain.size()) {</span>
+                case 0:
+<span class="nc" id="L122">                    l.empty();</span>
+<span class="nc" id="L123">                    break;</span>
+                case 1:
+<span class="nc" id="L125">                    l.bind();</span>
+                default:
+<span class="nc" id="L127">                    l.changeMax();</span>
+<span class="nc" id="L128">                    l.change();</span>
+                    break;
+            }
+        }
+<span class="nc" id="L132">    }</span>
+
+    @Override
+    public String toString() {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (size() == 0) return &quot;{}&quot;;</span>
+<span class="nc" id="L137">        StringBuilder b = new StringBuilder();</span>
+<span class="nc" id="L138">        b.append(&quot;{&quot;);</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">        for (int i = min(); i &lt; max(); i++)</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            if (contains((i)))</span>
+<span class="nc" id="L141">                b.append(i).append(',');</span>
+<span class="nc" id="L142">        b.append(max());</span>
+<span class="nc" id="L143">        b.append(&quot;}&quot;);</span>
+<span class="nc" id="L144">        return b.toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

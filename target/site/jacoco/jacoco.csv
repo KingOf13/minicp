@@ -1,0 +1,93 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+minicp,minicp.engine.core,IntVarViewOffset,205,0,12,0,47,0,25,0,19,0
+minicp,minicp.engine.core,MiniCP,120,0,12,0,38,0,19,0,13,0
+minicp,minicp.engine.core,BoolVarIsEqual,98,0,18,0,23,0,16,0,7,0
+minicp,minicp.engine.core,AbstractConstraint,41,0,0,0,14,0,8,0,8,0
+minicp,minicp.engine.core,ConstraintClosure,12,0,0,0,6,0,3,0,3,0
+minicp,minicp.engine.core,BoolVarImpl,29,0,6,0,6,0,7,0,4,0
+minicp,minicp.engine.core,IntVarViewOpposite,155,0,8,0,42,0,23,0,19,0
+minicp,minicp.engine.core,IntVarViewMul,299,0,36,0,60,0,40,0,22,0
+minicp,minicp.engine.core,IntVarImpl.new DomainListener() {...},36,0,0,0,10,0,6,0,6,0
+minicp,minicp.engine.core,SparseSetDomain,241,0,46,0,62,0,36,0,12,0
+minicp,minicp.engine.core,IntVarImpl,314,0,28,0,67,0,37,0,23,0
+minicp,minicp.engine.core,Minimize,38,0,2,0,8,0,4,0,3,0
+minicp,minicp.cp,BranchingScheme,191,0,20,0,36,0,28,0,18,0
+minicp,minicp.cp,Factory,492,0,20,0,85,0,52,0,42,0
+minicp,minicp.cp,Factory.new AbstractConstraint() {...},16,0,0,0,3,0,2,0,2,0
+minicp,minicp.cp,Factory.new AbstractConstraint() {...},16,0,0,0,3,0,2,0,2,0
+minicp,minicp.cp,Factory.new AbstractConstraint() {...},16,0,0,0,3,0,2,0,2,0
+minicp,minicp.cp,LastConflictBranching,84,0,8,0,18,0,9,0,5,0
+minicp,minicp.search,LimitedDiscrepancyBranching,20,0,2,0,6,0,3,0,2,0
+minicp,minicp.search,Sequencer,10,0,0,0,4,0,2,0,2,0
+minicp,minicp.search,DFSearch,261,0,8,0,71,0,29,0,25,0
+minicp,minicp.search,SearchStatistics,79,0,0,0,18,0,10,0,10,0
+minicp,minicp.search,StopSearchException,3,0,0,0,1,0,1,0,1,0
+minicp,minicp.engine.constraints,AllDifferentDC.new GraphUtil.Graph() {...},22,0,0,0,4,0,4,0,4,0
+minicp,minicp.engine.constraints,Maximum,178,0,24,0,30,0,16,0,4,0
+minicp,minicp.engine.constraints,Element1D,17,0,0,0,2,0,1,0,1,0
+minicp,minicp.engine.constraints,AllDifferentAC,431,0,26,0,61,0,18,0,5,0
+minicp,minicp.engine.constraints,TableDecomp,126,0,22,0,22,0,14,0,3,0
+minicp,minicp.engine.constraints,Circuit,240,0,14,0,24,0,12,0,5,0
+minicp,minicp.engine.constraints,IsOr,196,0,28,0,34,0,17,0,3,0
+minicp,minicp.engine.constraints,IsLessOrEqual,69,0,8,0,15,0,7,0,3,0
+minicp,minicp.engine.constraints,AllDifferentAC.new GraphUtil.Graph() {...},22,0,0,0,4,0,4,0,4,0
+minicp,minicp.engine.constraints,Absolute,104,0,10,0,18,0,8,0,3,0
+minicp,minicp.engine.constraints,Profile.Entry,25,0,4,0,5,0,4,0,2,0
+minicp,minicp.engine.constraints,IsLessOrEqualVar,105,0,8,0,19,0,7,0,3,0
+minicp,minicp.engine.constraints,Disjunctive,429,0,38,0,62,0,29,0,10,0
+minicp,minicp.engine.constraints,AllDifferentBinary,51,0,4,0,8,0,4,0,2,0
+minicp,minicp.engine.constraints,ShortTableCT,302,0,26,0,37,0,17,0,4,0
+minicp,minicp.engine.constraints,ShortTableDecomp,147,0,26,0,23,0,16,0,3,0
+minicp,minicp.engine.constraints,Element2D,340,0,24,0,45,0,20,0,8,0
+minicp,minicp.engine.constraints,Profile,178,0,12,0,29,0,12,0,6,0
+minicp,minicp.engine.constraints,LessOrEqual,45,0,2,0,13,0,4,0,3,0
+minicp,minicp.engine.constraints,NegTableCT,212,0,26,0,28,0,16,0,3,0
+minicp,minicp.engine.constraints,AllDifferentDC,431,0,26,0,61,0,18,0,5,0
+minicp,minicp.engine.constraints,TableCT,285,0,24,0,35,0,16,0,4,0
+minicp,minicp.engine.constraints,Element1DVar,184,0,18,0,34,0,12,0,3,0
+minicp,minicp.engine.constraints,NotEqual,84,0,6,0,19,0,7,0,4,0
+minicp,minicp.engine.constraints,Or,178,0,18,0,19,0,12,0,3,0
+minicp,minicp.engine.constraints,ThetaTree.Node,26,0,0,0,12,0,6,0,6,0
+minicp,minicp.engine.constraints,IsEqual,80,0,10,0,23,0,8,0,3,0
+minicp,minicp.engine.constraints,CumulativeDecomposition,158,0,4,0,21,0,8,0,6,0
+minicp,minicp.engine.constraints,Sum,275,0,12,0,40,0,11,0,5,0
+minicp,minicp.engine.constraints,Equal,147,0,8,0,33,0,10,0,6,0
+minicp,minicp.engine.constraints,Profile.Rectangle,73,0,6,0,13,0,10,0,7,0
+minicp,minicp.engine.constraints,Cumulative,292,0,26,0,35,0,20,0,7,0
+minicp,minicp.engine.constraints,ThetaTree,223,0,8,0,44,0,16,0,12,0
+minicp,minicp.engine.constraints,Element2D.Triple,18,0,0,0,6,0,2,0,2,0
+minicp,minicp.engine.constraints,Element1DDomainConsistent,19,0,0,0,6,0,2,0,2,0
+minicp,minicp.engine.constraints,MaximumMatching,383,0,46,0,67,0,29,0,6,0
+minicp,minicp.engine.constraints,Disjunctive.new Comparator() {...},22,0,0,0,2,0,2,0,2,0
+minicp,minicp.engine.constraints,Disjunctive.new Comparator() {...},22,0,0,0,2,0,2,0,2,0
+minicp,minicp.util.exception,InconsistencyException,12,0,0,0,4,0,4,0,4,0
+minicp,minicp.util.exception,IntOverFlowException,14,0,0,0,3,0,2,0,2,0
+minicp,minicp.util.exception,NotImplementedException,24,0,0,0,6,0,3,0,3,0
+minicp,minicp.util,GraphUtil,199,0,24,0,46,0,20,0,8,0
+minicp,minicp.util,StoreValue,81,0,6,0,15,0,6,0,3,0
+minicp,minicp.util,GraphUtil.new GraphUtil.Graph() {...},20,0,0,0,4,0,4,0,4,0
+minicp,minicp.util.io,InputReader,198,0,24,0,49,0,17,0,5,0
+minicp,minicp.state,Copy.CopyStateEntry,16,0,0,0,5,0,2,0,2,0
+minicp,minicp.state,TrailMap,17,0,0,0,4,0,3,0,3,0
+minicp,minicp.state,StateInterval,176,0,14,0,29,0,20,0,13,0
+minicp,minicp.state,Trail.TrailStateEntry,16,0,0,0,5,0,2,0,2,0
+minicp,minicp.state,CopyInt,5,0,0,0,2,0,1,0,1,0
+minicp,minicp.state,TrailBool.new StateEntry() {...},12,0,0,0,3,0,2,0,2,0
+minicp,minicp.state,TrailBool.new StateEntry() {...},12,0,0,0,3,0,2,0,2,0
+minicp,minicp.state,Copier.Backup,48,0,4,0,9,0,4,0,2,0
+minicp,minicp.state,Trailer.Backup,17,0,2,0,5,0,3,0,2,0
+minicp,minicp.state,CopyBool,20,0,0,0,7,0,4,0,4,0
+minicp,minicp.state,CopyBool.CopyBoolStateEntry,16,0,0,0,5,0,2,0,2,0
+minicp,minicp.state,Copy,25,0,0,0,8,0,5,0,5,0
+minicp,minicp.state,Trailer,129,0,4,0,36,0,15,0,13,0
+minicp,minicp.state,CopyMap,29,0,0,0,7,0,5,0,5,0
+minicp,minicp.state,StateSparseBitSet,208,0,12,0,29,0,13,0,7,0
+minicp,minicp.state,StateInt,24,0,0,0,2,0,2,0,2,0
+minicp,minicp.state,TrailBool,67,0,6,0,18,0,7,0,4,0
+minicp,minicp.state,StateSparseBitSet.BitSet,110,0,6,0,14,0,8,0,5,0
+minicp,minicp.state,Trail,65,0,4,0,17,0,7,0,5,0
+minicp,minicp.state,StateSparseSet,583,0,88,0,109,0,65,0,21,0
+minicp,minicp.state,TrailInt,6,0,0,0,2,0,1,0,1,0
+minicp,minicp.state,Copier,120,0,4,0,35,0,14,0,12,0
+minicp,minicp.state,StateLazySparseSet,3,0,0,0,1,0,1,0,1,0
+minicp,minicp.state,StateStack,52,0,2,0,11,0,5,0,4,0

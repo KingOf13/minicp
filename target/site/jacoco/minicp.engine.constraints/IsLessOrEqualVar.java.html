@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IsLessOrEqualVar.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">minicp</a> &gt; <a href="index.source.html" class="el_package">minicp.engine.constraints</a> &gt; <span class="el_source">IsLessOrEqualVar.java</span></div><h1>IsLessOrEqualVar.java</h1><pre class="source lang-java linenums">/*
+ * mini-cp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License  v3
+ * as published by the Free Software Foundation.
+ *
+ * mini-cp is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY.
+ * See the GNU Lesser General Public License  for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
+ *
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ */
+
+package minicp.engine.constraints;
+
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.BoolVar;
+import minicp.engine.core.Constraint;
+import minicp.engine.core.IntVar;
+import minicp.util.exception.NotImplementedException;
+
+import static minicp.cp.Factory.lessOrEqual;
+import static minicp.cp.Factory.plus;
+
+/**
+ * Reified is less or equal constraint {@code b &lt;=&gt; x &lt;= y}.
+ */
+public class IsLessOrEqualVar extends AbstractConstraint {
+
+    private final BoolVar b;
+    private final IntVar x;
+    private final IntVar y;
+
+    
+
+    /**
+     * Creates a reified is less or equal constraint {@code b &lt;=&gt; x &lt;= y}.
+     * @param b the truth value that will be set to true if {@code x &lt;= y}, false otherwise
+     * @param x left hand side of less or equal operator
+     * @param y right hand side of less or equal operator
+     */
+    public IsLessOrEqualVar(BoolVar b, IntVar x, IntVar y) {
+<span class="nc" id="L45">        super(x.getSolver());</span>
+<span class="nc" id="L46">        this.b = b;</span>
+<span class="nc" id="L47">        this.x = x;</span>
+<span class="nc" id="L48">        this.y = y;</span>
+        
+<span class="nc" id="L50">    }</span>
+
+    @Override
+    public void post() {
+<span class="nc" id="L54">        x.propagateOnDomainChange(this);</span>
+<span class="nc" id="L55">        y.propagateOnDomainChange(this);</span>
+<span class="nc" id="L56">        b.propagateOnBind(this);</span>
+<span class="nc" id="L57">        propagate();</span>
+<span class="nc" id="L58">    }</span>
+
+    @Override
+    public void propagate() {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (b.isBound()) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">            if (b.isTrue()) getSolver().post(new LessOrEqual(x,y));</span>
+            else {
+<span class="nc" id="L65">                x.removeBelow(y.min());</span>
+<span class="nc" id="L66">                x.remove(y.min());</span>
+<span class="nc" id="L67">                getSolver().post(new LessOrEqual(y,x));</span>
+<span class="nc" id="L68">                getSolver().post(new NotEqual(x,y));</span>
+            }
+        }
+<span class="nc bnc" id="L71" title="All 2 branches missed.">        else if (x.max() &lt;= y.min()) b.assign(true);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        else if (x.min() &gt; y.max()) b.assign(false);</span>
+<span class="nc" id="L73">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
